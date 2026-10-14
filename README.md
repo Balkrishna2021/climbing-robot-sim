@@ -1,90 +1,123 @@
-# Climbing Robot: Simulation and Control Prototype
+# Climbing Robot for Tower Inspection
 
-A small prototype for a robot that inspects, cleans and maintains metal towers (for example wind turbine or transmission towers). The concept uses two crawler tracks with magnetic or vacuum adhesion, a central control unit, and a removable brush module.
+**Simulation and control prototype for a crawler robot that inspects, cleans and maintains metal towers.**
 
-This repository covers the parts I could build and test in software:
+![Platform](https://img.shields.io/badge/platform-Gazebo%20Sim-orange)
+![Controller](https://img.shields.io/badge/controller-ESP32-blue)
+![CAD](https://img.shields.io/badge/CAD-Autodesk%20Fusion-lightgrey)
+![Status](https://img.shields.io/badge/status-prototype-yellow)
 
-- a **Gazebo world** with a differential-drive model of the robot and a simulated tower
-- **drive and coverage scripts** that send velocity commands to the robot
-- a **URDF** description of the robot using standard ROS conventions
-- an **ESP32 controller sketch** (simulated in Wokwi) for remote-control and autonomous mode switching with an emergency stop
+<p align="center">
+  <img src="docs/drive_demo.gif" alt="Drive test: forward, turn in place, forward" width="640">
+  <br><em>Drive test of the simplified model: forward, turn in place, forward on a new heading.</em>
+</p>
 
-![Gazebo world](docs/gazebo_world.png)
+---
 
-## Robot dimensions
+## Overview
 
-Taken from my Fusion 360 reference design:
+Wind turbine towers, transmission towers and other steel structures need regular inspection and cleaning. That work is usually done by people at height. This project explores a small tracked robot that can do it instead.
 
-| Part | Size |
+The concept has four parts:
+
+| Part | Purpose |
+| --- | --- |
+| Two crawler tracks | Drive the robot and hold it to the steel surface using magnetic or vacuum adhesion |
+| Central control unit | ESP32 controller, motor drivers and power |
+| Removable brush module | Interchangeable tool for cleaning; other tools can mount in its place |
+| Control modes | Remote control by an operator, or autonomous coverage of the tower surface |
+
+This repository covers the parts built and tested in software so far: the CAD concept, a Gazebo simulation, motion scripts, a URDF description and the embedded controller.
+
+## Mechanical design
+
+<p align="center">
+  <img src="docs/fusion_design.png" alt="Fusion assembly of the climbing robot" width="620">
+  <br><em>Assembly in Autodesk Fusion: two tracks, control unit, brush module and chassis.</em>
+</p>
+
+| Parameter | Value |
 | --- | --- |
 | Chassis | 360 x 260 x 12 mm |
 | Track gauge (centre to centre) | 260 mm |
-| Drive sprocket / wheel radius | 35 mm |
-| Mass (model) | 2.5 kg |
+| Drive sprocket radius | 35 mm |
+| Model mass | 2.5 kg |
+
+## Embedded controller (ESP32)
+
+<p align="center">
+  <img src="docs/wokwi_controller.png" alt="ESP32 controller circuit in Wokwi" width="560">
+  <br><em>Controller circuit in Wokwi: joystick, mode and E-stop buttons, OLED status display and motor-channel indicators.</em>
+</p>
+
+**[Run the live simulation in your browser](https://wokwi.com/projects/473786583774125057)** (no hardware or install needed).
+
+The sketch [`firmware/rc_controller/rc_controller.ino`](firmware/rc_controller/rc_controller.ino) shows one motor-drive path serving both modes:
+
+- **Arcade mixing:** joystick throttle and turn become left and right motor PWM.
+- **Mode switching:** a button toggles between remote control and an autonomous command sequence that stands in for the coverage planner.
+- **Emergency stop:** applied last, after mixing and mode selection, so nothing upstream can bypass it.
+
+LEDs represent the two motor channels because Wokwi has no built-in motor driver. To build the project yourself, create an ESP32 project at [wokwi.com](https://wokwi.com), paste in the sketch and add the libraries listed in `libraries.txt`.
+
+## Gazebo simulation
+
+The world contains a differential-drive model of the robot and a 3 m steel tower. The robot listens for velocity commands on `/cmd_vel` and publishes wheel odometry.
+
+**Quick start** (Gazebo Sim installed):
+
+```bash
+cd gazebo
+bash run_sim.sh          # coverage sweep
+bash run_sim.sh drive    # simple drive test
+```
+
+`run_sim.sh` starts the server and GUI, waits for the robot to be ready, runs the chosen demo, then prints the robot's final position.
+
+**Manual start** (three terminals):
+
+```bash
+export GZ_IP=127.0.0.1                          # run in each terminal
+gz sim -s -r gazebo/climbing_robot_world.sdf    # 1. physics server
+gz sim -g                                       # 2. GUI
+bash gazebo/coverage_demo.sh                    # 3. motion script
+```
+
+The coverage demo drives a boustrophedon ("lawnmower") pattern: sweep a row, step over, sweep back. On a tower, the same pattern becomes sweeping one ring of the shell, stepping up one brush width, and sweeping the next.
 
 ## Repository layout
 
 ```
 gazebo/
-  climbing_robot_world.sdf   Robot + tower world (Gazebo Sim / gz sim)
+  climbing_robot_world.sdf   Robot and tower world
   test_diffdrive.sdf         Minimal world for testing the drive plugin
-  drive_demo.sh              Forward, turn in place, forward again
-  coverage_demo.sh           Boustrophedon ("lawnmower") coverage sweep
+  run_sim.sh                 One-command launcher
+  drive_demo.sh              Forward, turn in place, forward
+  coverage_demo.sh           Three-row coverage sweep
 urdf/
-  climbing_robot.urdf        Simplified robot description (X forward, Z up)
+  climbing_robot.urdf        Robot description (ROS conventions: X forward, Z up)
 firmware/rc_controller/
-  rc_controller.ino          ESP32 RC / autonomous controller with E-stop
-  libraries.txt              Libraries needed in Wokwi
-docs/
-  gazebo_world.png           Screenshot of the simulation
+  rc_controller.ino          ESP32 remote/autonomous controller with E-stop
+  libraries.txt              Wokwi library list
+docs/                        Images used in this README
 ```
-
-## Running the Gazebo simulation
-
-Tested with Gazebo Sim (`gz sim`). Open three terminals:
-
-```bash
-# 1. Start the physics server
-gz sim -s -r gazebo/climbing_robot_world.sdf
-
-# 2. Start the GUI
-gz sim -g
-
-# 3. Drive the robot
-bash gazebo/drive_demo.sh       # simple drive test
-bash gazebo/coverage_demo.sh    # 3-row coverage sweep
-```
-
-The robot listens on `/cmd_vel` (`gz.msgs.Twist`) through the DiffDrive plugin and publishes odometry on `/odom`.
-
-## Controller sketch (ESP32 / Wokwi)
-
-`rc_controller.ino` shows how one motor-drive path can serve both modes:
-
-- **Arcade mixing**: throttle and turn from a joystick become left and right motor PWM.
-- **Mode switching**: a button toggles between remote control and an autonomous command sequence that stands in for the coverage planner.
-- **Emergency stop**: applied last, after mixing and mode selection, so nothing upstream can bypass it.
-
-To run it, create an ESP32 project at [wokwi.com](https://wokwi.com), paste in the sketch, and add the libraries in `libraries.txt`. LEDs represent the motor channels because Wokwi has no built-in motor driver part.
 
 ## Current limitations
 
-I want to be clear about what this does and does not show:
+- **Ground driving only.** The robot drives on flat ground around the tower. Driving up the tower face needs the track adhesion force modelled, which requires a custom Gazebo plugin.
+- **Open-loop motion.** Turns are timed, not corrected using odometry, so the robot drifts over long runs.
+- **No radio link yet.** The controller marks where an ESP-NOW receiver and a link-loss watchdog connect to the same safety gate as the E-stop.
+- **Simplified model.** The simulation uses wheels and a box chassis in place of the full tracked CAD geometry.
 
-- **No real climbing yet.** The robot drives on flat ground around the tower. Climbing needs the magnetic or vacuum track adhesion from the CAD design, which would need a custom Gazebo force plugin.
-- **Open-loop control.** Turns are timed by the number of messages sent, not corrected using `/odom` feedback, so the robot drifts.
-- **Motion tracking still to be checked.** In my last scripted test run, the pose logger recorded no change in the robot's position. Either the robot did not move or the logger read the wrong value, and I have not yet confirmed which.
-- **No wireless link or link-loss watchdog.** The sketch marks where an ESP-NOW receiver and a timeout check would plug into the same safety gate as the E-stop.
-- **CAD mesh not included.** The world uses a plain box in place of the Fusion 360 assembly mesh.
+## Roadmap
 
-## Next steps
-
-1. Fix and confirm motion in the coverage demo using `/odom`.
-2. Replace timed turns with closed-loop heading control.
-3. Add an adhesion force plugin so the robot can drive up the tower face.
-4. Move the scripts to a ROS 2 node with a proper coverage planner.
+1. Closed-loop heading control using wheel odometry
+2. Adhesion force plugin so the robot can drive on the tower face
+3. ROS 2 node with a full coverage planner for cylindrical surfaces
+4. Wireless link and watchdog on real ESP32 hardware
 
 ## Author
 
-Balkrishna Sedhain, Electronics and Communication Engineer (B.E.), Master of Information Systems
-[LinkedIn](https://www.linkedin.com/in/balkrishnasedhain)
+**Balkrishna Sedhain**
+B.E. Electronics and Communication Engineering, Master of Information Systems
+[LinkedIn](https://www.linkedin.com/in/balkrishnasedhain) · [GitHub](https://github.com/Balkrishna2021)
