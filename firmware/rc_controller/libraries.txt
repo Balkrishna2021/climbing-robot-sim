@@ -1,0 +1,6 @@
+# Wokwi auto-installs these when you open the project (or accept the
+# prompt it shows after the first compile). If you paste sketch.ino into
+# a NEW project instead of importing the whole folder, just click
+# "Add libraries" when Wokwi flags the two missing #includes.
+Adafruit GFX Library
+Adafruit SSD1306
