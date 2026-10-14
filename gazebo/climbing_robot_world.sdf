@@ -1,0 +1,176 @@
+<?xml version="1.0"?>
+<!--
+  Gazebo world for the REAL ClimbingRobot_v1 reference model.
+  base_link uses the actual Fusion assembly mesh (climbing_robot_full.stl,
+  exported in metres) purely as VISUAL decoration; the physics still runs
+  on a simple box + two wheel joints + casters, same as the PyBullet
+  proof-of-concept, since the real tread/sprocket geometry has no
+  moving parts to actually drive.
+
+  The Fusion document uses Y-up (X=length/climb, Y=up, Z=left-right);
+  Gazebo is Z-up (X=forward, Y=left, Z=up). The mesh visual is rotated
+  +90 degrees about X to convert between the two conventions with no
+  mirroring/distortion.
+-->
+<sdf version="1.9">
+  <world name="climbing_robot_world">
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"></plugin>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"></plugin>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"></plugin>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.3 0.3 0.3 1</specular>
+      <direction>-0.4 0.2 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>
+          <surface><friction><ode><mu>1.1</mu><mu2>1.1</mu2></ode></friction></surface>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>
+          <material><ambient>0.7 0.7 0.72 1</ambient><diffuse>0.7 0.7 0.72 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="climbing_robot">
+      <pose>0 0 0.036 0 0 -1.5708</pose>
+
+      <link name="base_link">
+        <inertial>
+          <mass>2.5</mass>
+          <inertia><ixx>0.015</ixx><iyy>0.03</iyy><izz>0.04</izz><ixy>0</ixy><ixz>0</ixz><iyz>0</iyz></inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry><box><size>0.36 0.26 0.012</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <pose>0 0 0 0 0 0</pose>
+          <!-- Original visual used the Fusion 360 assembly mesh (climbing_robot_full.stl),
+               which is not included in this repo. A plain box stands in for it. -->
+          <geometry><box><size>0.36 0.26 0.03</size></box></geometry>
+          <material><ambient>0.55 0.53 0.5 1</ambient><diffuse>0.6 0.58 0.55 1</diffuse></material>
+        </visual>
+      </link>
+
+      <link name="left_wheel">
+        <pose relative_to="base_link">0 0.13 0 -1.5708 0 0</pose>
+        <inertial><mass>0.15</mass><inertia><ixx>0.00006</ixx><iyy>0.00006</iyy><izz>0.0001</izz><ixy>0</ixy><ixz>0</ixz><iyz>0</iyz></inertia></inertial>
+        <collision name="collision">
+          
+          <geometry><cylinder><radius>0.035</radius><length>0.02</length></cylinder></geometry>
+          <surface><friction><ode><mu>1.3</mu><mu2>1.3</mu2></ode></friction></surface>
+        </collision>
+        <visual name="visual">
+          
+          <geometry><cylinder><radius>0.035</radius><length>0.02</length></cylinder></geometry>
+          <material><ambient>0.15 0.15 0.15 1</ambient><diffuse>0.15 0.15 0.15 1</diffuse></material>
+        </visual>
+      </link>
+      <joint name="left_wheel_joint" type="revolute">
+        <parent>base_link</parent>
+        <child>left_wheel</child>
+        <axis><xyz>0 0 1</xyz><limit><lower>-1e16</lower><upper>1e16</upper><effort>2</effort><velocity>20</velocity></limit></axis>
+      </joint>
+
+      <link name="right_wheel">
+        <pose relative_to="base_link">0 -0.13 0 -1.5708 0 0</pose>
+        <inertial><mass>0.15</mass><inertia><ixx>0.00006</ixx><iyy>0.00006</iyy><izz>0.0001</izz><ixy>0</ixy><ixz>0</ixz><iyz>0</iyz></inertia></inertial>
+        <collision name="collision">
+          
+          <geometry><cylinder><radius>0.035</radius><length>0.02</length></cylinder></geometry>
+          <surface><friction><ode><mu>1.3</mu><mu2>1.3</mu2></ode></friction></surface>
+        </collision>
+        <visual name="visual">
+          
+          <geometry><cylinder><radius>0.035</radius><length>0.02</length></cylinder></geometry>
+          <material><ambient>0.15 0.15 0.15 1</ambient><diffuse>0.15 0.15 0.15 1</diffuse></material>
+        </visual>
+      </link>
+      <joint name="right_wheel_joint" type="revolute">
+        <parent>base_link</parent>
+        <child>right_wheel</child>
+        <axis><xyz>0 0 1</xyz><limit><lower>-1e16</lower><upper>1e16</upper><effort>2</effort><velocity>20</velocity></limit></axis>
+      </joint>
+
+      <link name="caster_front">
+        <pose relative_to="base_link">0.15 0 -0.021 0 0 0</pose>
+        <inertial><mass>0.02</mass><inertia><ixx>1e-6</ixx><iyy>1e-6</iyy><izz>1e-6</izz><ixy>0</ixy><ixz>0</ixz><iyz>0</iyz></inertia></inertial>
+        <collision name="collision">
+          <geometry><sphere><radius>0.015</radius></sphere></geometry>
+          <surface><friction><ode><mu>0.05</mu><mu2>0.05</mu2></ode></friction></surface>
+        </collision>
+        <visual name="visual">
+          <geometry><sphere><radius>0.015</radius></sphere></geometry>
+          <material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
+        </visual>
+      </link>
+      <joint name="caster_front_joint" type="fixed">
+        <parent>base_link</parent>
+        <child>caster_front</child>
+      </joint>
+
+      <link name="caster_rear">
+        <pose relative_to="base_link">-0.15 0 -0.021 0 0 0</pose>
+        <inertial><mass>0.02</mass><inertia><ixx>1e-6</ixx><iyy>1e-6</iyy><izz>1e-6</izz><ixy>0</ixy><ixz>0</ixz><iyz>0</iyz></inertia></inertial>
+        <collision name="collision">
+          <geometry><sphere><radius>0.015</radius></sphere></geometry>
+          <surface><friction><ode><mu>0.05</mu><mu2>0.05</mu2></ode></friction></surface>
+        </collision>
+        <visual name="visual">
+          <geometry><sphere><radius>0.015</radius></sphere></geometry>
+          <material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
+        </visual>
+      </link>
+      <joint name="caster_rear_joint" type="fixed">
+        <parent>base_link</parent>
+        <child>caster_rear</child>
+      </joint>
+
+      <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
+        <left_joint>left_wheel_joint</left_joint>
+        <right_joint>right_wheel_joint</right_joint>
+        <wheel_separation>0.26</wheel_separation>
+        <wheel_radius>0.035</wheel_radius>
+        <topic>cmd_vel</topic>
+        <odom_publish_frequency>20</odom_publish_frequency>
+      </plugin>
+
+    </model>
+
+    <!-- Simulated metal tower: the surface the Task 2 brief asks the
+         coverage/path-following demo to reference. Static: the robot's
+         wheeled DiffDrive locomotion + coverage sweep runs on the ground
+         around its base, at a ~1.2m radius, not up the vertical face.
+         Note: true climbing needs the magnetic/vacuum
+         adhesion track mechanism from the Task 1 CAD, which would need a
+         custom Gazebo force plugin to simulate, out of scope for this
+         version. This model exists so the coverage path has a real tower to
+         circle, not an arbitrary point in empty space. -->
+    <model name="tower">
+      <static>true</static>
+      <pose>1.2 0 1.5 0 0 0</pose>
+      <link name="tower_link">
+        <collision name="collision">
+          <geometry><cylinder><radius>0.4</radius><length>3.0</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.4</radius><length>3.0</length></cylinder></geometry>
+          <material><ambient>0.45 0.47 0.5 1</ambient><diffuse>0.5 0.52 0.55 1</diffuse><specular>0.6 0.6 0.6 1</specular></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
