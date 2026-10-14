@@ -1,0 +1,5 @@
+*.log
+*.bak*
+*.raw
+trace.csv
+.DS_Store
