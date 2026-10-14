@@ -8,8 +8,8 @@
 ![Status](https://img.shields.io/badge/status-prototype-yellow)
 
 <p align="center">
-  <img src="docs/drive_demo.gif" alt="Drive test: forward, turn in place, forward" width="640">
-  <br><em>Drive test of the simplified model: forward, turn in place, forward on a new heading.</em>
+  <img src="docs/gazebo_drive.gif" alt="Robot driving beside the simulated tower in Gazebo" width="720">
+  <br><em>Gazebo Sim: the robot drives forward, turns on the spot and drives on beside the simulated steel tower (sped up 5x).</em>
 </p>
 
 ---
@@ -83,6 +83,8 @@ gz sim -g                                       # 2. GUI
 bash gazebo/coverage_demo.sh                    # 3. motion script
 ```
 
+`gazebo/three_commands.command` sends three commands in a row (forward, turn left, forward then stop) and prints the robot's position after each. On a Mac you can double-click it.
+
 The coverage demo drives a boustrophedon ("lawnmower") pattern: sweep a row, step over, sweep back. On a tower, the same pattern becomes sweeping one ring of the shell, stepping up one brush width, and sweeping the next.
 
 ## Repository layout
@@ -92,6 +94,7 @@ gazebo/
   climbing_robot_world.sdf   Robot and tower world
   test_diffdrive.sdf         Minimal world for testing the drive plugin
   run_sim.sh                 One-command launcher
+  three_commands.command     Forward, turn, forward test with position readout
   drive_demo.sh              Forward, turn in place, forward
   coverage_demo.sh           Three-row coverage sweep
 urdf/
