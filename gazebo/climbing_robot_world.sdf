@@ -45,7 +45,7 @@
     </model>
 
     <model name="climbing_robot">
-      <pose>0 0 0.036 0 0 -1.5708</pose>
+      <pose>0 0 0.040 0 0 -1.5708</pose>
 
       <link name="base_link">
         <inertial>
@@ -105,7 +105,7 @@
       </joint>
 
       <link name="caster_front">
-        <pose relative_to="base_link">0.15 0 -0.021 0 0 0</pose>
+        <pose relative_to="base_link">0.15 0 -0.019 0 0 0</pose>
         <inertial><mass>0.02</mass><inertia><ixx>1e-6</ixx><iyy>1e-6</iyy><izz>1e-6</izz><ixy>0</ixy><ixz>0</ixz><iyz>0</iyz></inertia></inertial>
         <collision name="collision">
           <geometry><sphere><radius>0.015</radius></sphere></geometry>
@@ -122,7 +122,7 @@
       </joint>
 
       <link name="caster_rear">
-        <pose relative_to="base_link">-0.15 0 -0.021 0 0 0</pose>
+        <pose relative_to="base_link">-0.15 0 -0.019 0 0 0</pose>
         <inertial><mass>0.02</mass><inertia><ixx>1e-6</ixx><iyy>1e-6</iyy><izz>1e-6</izz><ixy>0</ixy><ixz>0</ixz><iyz>0</iyz></inertia></inertial>
         <collision name="collision">
           <geometry><sphere><radius>0.015</radius></sphere></geometry>
